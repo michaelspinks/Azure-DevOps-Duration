@@ -26,8 +26,10 @@
             ValueFromPipelineByPropertyName = $false,
             Position = 0
         )]
-        [string[]]$Organization,
-        [string[]]$Project
+        [string]$Organization,
+        [string]$Project,
+		[string]$filepath = '.\MyOutput.csv'
+
 
     )
 
@@ -46,7 +48,7 @@
         $filepath = ".\MyOutput.csv"
 
         #Configures Azure DevOps to query organisation and project
-        az devops configure --defaults organization=$Organization project=$project
+        az devops configure --defaults organization=$Organization project=$Project
 
         # stores list of pipelines in myPipelineList, converts from Json
         $myPipelineList = az pipelines list | ConvertFrom-Json
