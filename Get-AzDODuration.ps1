@@ -34,8 +34,8 @@ $mybuildInformation = foreach ($pipeline in $myPipelineList) {
                 Pipeline = $pipeline.id
                 PipelineName = $pipeline.name
                 Build = $myBuild.buildNumber
-                finishTime = $myBuild.finishTime
                 startTime = $myBuild.startTime
+                finishTime = $myBuild.finishTime
             }
     }
 }
