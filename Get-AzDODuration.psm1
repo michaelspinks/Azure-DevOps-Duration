@@ -33,6 +33,14 @@
 
     )
 
+  # Checks for the presence of the $env:AZURE_DEVOPS_EXT_PAT being set.  Terminates if missing
+
+  try {
+        Get-childitem -Path Env:\AZURE_DEVOPS_EXT_PAT2 -ErrorAction Stop | Select-Object -Property Name -ErrorAction Stop
+  } catch {
+        Write-Warning "The environment variable AZURE_DEVOPS_EXT_PAT was not found.  Please add including a valid PAT token."
+  }
+
   # Checks for the presence of the azure-devops az extension.  Terminates if missing
         try {
             $ErrorActionPreference = "Stop"
