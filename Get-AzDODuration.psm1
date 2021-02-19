@@ -33,52 +33,50 @@
 
     )
 
-  # Checks for the presence of the $env:AZURE_DEVOPS_EXT_PAT being set.  Terminates if missing
+    # Checks for the presence of the $env:AZURE_DEVOPS_EXT_PAT being set.  Terminates if missing
 
-  try {
+    try {
         Get-childitem -Path Env:\AZURE_DEVOPS_EXT_PAT2 -ErrorAction Stop | Select-Object -Property Name -ErrorAction Stop
-  } catch {
+    }
+    catch {
         Write-Warning "The environment variable AZURE_DEVOPS_EXT_PAT was not found.  Please add including a valid PAT token."
-  }
+    }
 
-  # Checks for the presence of the azure-devops az extension.  Terminates if missing
-        try {
-            $ErrorActionPreference = "Stop"
-            az extension show --name azure-devops
-            $ErrorActionPreference = "Continue"
-        }
-        catch  {
-            Write-Warning "The az extension Azure-Devops was not found.  Please install the module ""az extension add --name azure-devops"""
-            Exit
-            }
+    # Checks for the presence of the azure-devops az extension.  Terminates if missing
+    try {
+        $ErrorActionPreference = "Stop"
+        az extension show --name azure-devops
+        $ErrorActionPreference = "Continue"
+    }
+    catch {
+        Write-Warning "The az extension Azure-Devops was not found.  Please install the module ""az extension add --name azure-devops"""
+        Exit
+    }
         
-        # File output path
-        $filepath = ".\MyOutput.csv"
+    #Configures Azure DevOps to query organisation and project
+    az devops configure --defaults organization=$Organization project=$Project
 
-        #Configures Azure DevOps to query organisation and project
-        az devops configure --defaults organization=$Organization project=$Project
-
-        # stores list of pipelines in myPipelineList, converts from Json
-        $myPipelineList = az pipelines list | ConvertFrom-Json
+    # stores list of pipelines in myPipelineList, converts from Json
+    $myPipelineList = az pipelines list | ConvertFrom-Json
         
-        # Loops through each pipeline in the project
-        # then loops through all the builds in the pipeline 
-        # Stores pipeline, pipeline name, build number, finish and start time in $mybuildInformation variable
-        $mybuildInformation = foreach ($pipeline in $myPipelineList) {
-            # Stores builds from each pipeline in myBuildList then loops through them
-            $myBuildList = az pipelines runs list --pipeline-ids $pipeline.id | ConvertFrom-Json 
-            foreach ($mybuild in $myBuildList) {                 
-                [pscustomobject]@{
-                    Pipeline     = $pipeline.id
-                    PipelineName = $pipeline.name
-                    Build        = $myBuild.buildNumber
-                    startTime    = $myBuild.startTime
-                    finishTime   = $myBuild.finishTime
-                }
+    # Loops through each pipeline in the project
+    # then loops through all the builds in the pipeline 
+    # Stores pipeline, pipeline name, build number, finish and start time in $mybuildInformation variable
+    $mybuildInformation = foreach ($pipeline in $myPipelineList) {
+        # Stores builds from each pipeline in myBuildList then loops through them
+        $myBuildList = az pipelines runs list --pipeline-ids $pipeline.id | ConvertFrom-Json 
+        foreach ($mybuild in $myBuildList) {                 
+            [pscustomobject]@{
+                Pipeline     = $pipeline.id
+                PipelineName = $pipeline.name
+                Build        = $myBuild.buildNumber
+                startTime    = $myBuild.startTime
+                finishTime   = $myBuild.finishTime
             }
         }
+    }
 
-        # Outputs pipeline, pipeline name, build number, finish and start time to CSV file
-        $mybuildInformation | Export-Csv -Path $filepath -NoTypeInformation
+    # Outputs pipeline, pipeline name, build number, finish and start time to CSV file
+    $mybuildInformation | Export-Csv -Path $filepath -NoTypeInformation
 
 }
