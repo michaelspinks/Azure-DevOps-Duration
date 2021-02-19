@@ -36,10 +36,10 @@
     # Checks for the presence of the $env:AZURE_DEVOPS_EXT_PAT being set.  Terminates if missing
 
     try {
-        Get-childitem -Path Env:\AZURE_DEVOPS_EXT_PAT2 -ErrorAction Stop | Select-Object -Property Name -ErrorAction Stop
+        Get-childitem -Path Env:\AZURE_DEVOPS_EXT_PAT -ErrorAction Stop | Select-Object -Property Name -ErrorAction Stop
     }
     catch {
-        Write-Warning "The environment variable AZURE_DEVOPS_EXT_PAT was not found.  Please add including a valid PAT token."
+        Write-Host $PSItem.Exception.Message -ForegroundColor Red
     }
 
     # Checks for the presence of the azure-devops az extension.  Terminates if missing
@@ -49,15 +49,27 @@
         $ErrorActionPreference = "Continue"
     }
     catch {
-        Write-Warning "The az extension Azure-Devops was not found.  Please install the module ""az extension add --name azure-devops"""
+        Write-Host $PSItem.Exception.Message -ForegroundColor Red
         Exit
     }
         
     #Configures Azure DevOps to query organisation and project
     az devops configure --defaults organization=$Organization project=$Project
 
+    # Checks it is possible to retrieve list of Pipelines
     # stores list of pipelines in myPipelineList, converts from Json
-    $myPipelineList = az pipelines list | ConvertFrom-Json
+    try {
+        $ErrorActionPreference = "Stop"
+        $myPipelineList = az pipelines list | ConvertFrom-Json
+        $ErrorActionPreference = "Continue"
+    }
+    catch {
+        Write-Warning "Unable to retrieve the list of Azure DevOps Pipelines successfully"
+        Exit
+    }
+    finally {
+        $Error.Clear()
+    }
         
     # Loops through each pipeline in the project
     # then loops through all the builds in the pipeline 
